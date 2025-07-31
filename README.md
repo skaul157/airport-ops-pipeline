@@ -1,6 +1,6 @@
 # Real‑Time Airport Operations Data Pipeline
 
-![Pipeline Diagram](visualizations/updated_architecture_diagram.png)
+![Professional Architecture Diagram](visualizations/professional_architecture_diagram.png)
 
 ## Overview
 
