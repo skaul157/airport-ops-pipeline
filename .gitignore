@@ -1,0 +1,26 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Environment files
+env/
+.venv/
+
+# Data files (raw and intermediate)
+data/raw/
+data/staging/
+data/gold/
+
+# Logs
+logs/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE settings
+.vscode/
+.idea/
