@@ -1,6 +1,70 @@
 # Real‑Time Airport Operations Data Pipeline
 
-![Professional Architecture Diagram](visualizations/professional_architecture_diagram.png)
+## 🔧 Architecture Overview
+
+The architecture for this project follows a Kappa/Lakehouse pattern with both batch and real‑time ingestion, Delta Lake storage tiers and multiple serving layers.  To make the diagram universally viewable on GitHub without any external images, it is defined using MermaidJS below.  Feel free to copy and edit this diagram in tools like draw.io or diagrams.net if you wish to customise it further.
+
+```mermaid
+flowchart LR
+    %% Ingestion sources
+    subgraph Static_Sources ["Static Data Sources"]
+        FTP[FTP / SFTP]
+        Database[Relational DB]
+        API[REST API]
+        FTP --> DF
+        Database --> DF
+        API --> DF
+    end
+
+    subgraph Streaming_Sources ["Stream Data Sources"]
+        IoT[IoT / Sensor]
+        IoT --> EH
+    end
+
+    %% Ingestion services
+    DF["Azure Data Factory"]
+    EH["Azure Event Hub"]
+
+    %% Storage layers
+    Raw["Delta Lake Bronze"]
+    Silver["Delta Lake Silver"]
+    Gold["Delta Lake Gold"]
+
+    %% Processing
+    DB_Batch["Azure Databricks (Batch)"]
+    DB_Stream["Azure Databricks (Streaming)"]
+    DB_Proc["Azure Databricks (Processing)"]
+
+    %% Serving
+    Synapse["Azure Synapse / SQL"]
+    BI["Power BI / Apps"]
+    DQ["Monitoring & DQ (Great Expectations / Azure Monitor)"]
+
+    %% Flows
+    DF -->|"Batch ingest"| Raw
+    EH -->|"Real‑time ingest"| DB_Stream
+    Raw -->|"Cleanse"| DB_Batch
+    DB_Stream -->|"Parse & enrich"| Silver
+    DB_Batch -->|"Parse & enrich"| Silver
+    Silver -->|"Aggregate"| DB_Proc -->|"Publish"| Gold
+    Gold --> Synapse
+    Gold --> BI
+    Silver --> DQ
+    DB_Stream --> DQ
+    DB_Batch --> DQ
+
+    classDef ingest fill:#e7f3fe,stroke:#0078D4;
+    classDef process fill:#fdebd0,stroke:#E16D00;
+    classDef storage fill:#fff9db,stroke:#C8AB37;
+    classDef serving fill:#f5e8f7,stroke:#5C2D91;
+    classDef dq fill:#e8f5e9,stroke:#2E7D32;
+
+    class DF,EH,FTP,Database,API,IoT ingest;
+    class Raw,Silver,Gold storage;
+    class DB_Batch,DB_Stream,DB_Proc process;
+    class Synapse,BI serving;
+    class DQ dq;
+```
 
 ## Overview
 
@@ -27,9 +91,9 @@ This pipeline addresses several real‑world scenarios encountered at busy airpo
 | **Data Quality & Logging** | Great Expectations, Azure Monitor (see `scripts/logging_sample.py`) |
 | **Visualization & Analytics** | Power BI, Azure Synapse Analytics |
 
-## Architecture
+## Architecture Details
 
-The updated diagram above illustrates the end‑to‑end flow using Azure‑native components:
+The steps below describe the end‑to‑end flow using Azure‑native components:
 
 1. **Sources** – flight events stream in via **Event Hubs** and operational incidents are captured from **ServiceNow** APIs.
 2. **Azure Data Factory** orchestrates ingestion by reading from Event Hubs and landing raw events in the **Bronze** layer of a Data Lake.
